@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 
+
 # Документация рекомендует обращаться к модели User через эту функцию
 User = get_user_model()
 
