@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 # Документация рекомендует обращаться к модели User через эту функцию
 User = get_user_model()
 
+
 # класс Group - наследник класса Model из пакета models
 class Group(models.Model):
     title = models.CharField(max_length=200)
