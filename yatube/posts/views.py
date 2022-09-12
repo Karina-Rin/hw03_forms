@@ -3,9 +3,19 @@ from django.shortcuts import render, get_object_or_404, redirect
 from .models import Post, Group
 from django.contrib.auth import get_user_model
 from .forms import PostForm
+from django.conf import settings
+from django.contrib.auth.decorators import login_required
 
 
 User = get_user_model()
+
+# выведем paginator в отдельную функцию во избежании повтора кода
+def pagination(request, objects):
+    paginator = Paginator(objects, settings.PAGINATOR_DEFAULT_SIZE)
+    # Из URL извлекаем номер запрошенной страницы - это значение параметра page
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+    return page_obj
 
 
 def index(request):
@@ -13,11 +23,8 @@ def index(request):
     # в переменную posts будет сохранена выборка из 10 объектов модели Post,
     # отсортированных по полю pub_date по убыванию (от больших зн. к меньшим)
     posts = Post.objects.all()
-    paginator = Paginator(posts, 10)  # будем выгружать по 10 постов
-    # Из URL извлекаем номер запрошенной страницы - это значение параметра page
-    page_number = request.GET.get("page")
     # Получаем набор записей для страницы с запрошенным номером
-    page_obj = paginator.get_page(page_number)
+    page_obj = pagination(request, posts)
     # Отдаем в словаре контекста
     context = {
         "page_obj": page_obj,
@@ -33,12 +40,9 @@ def group_posts(request, slug):
     # В нашем случае в переменную group будут переданы объекты модели Group,
     # поле slug у которых соответствует значению slug в запросе
     group = get_object_or_404(Group, slug=slug)
-    posts = group.groups.all()
-    # будем выгружать по 10 постов
-    paginator = Paginator(posts, 10)
-    page_number = request.GET.get("page")
+    posts = group.posts.all()
     # Получаем набор записей для страницы с запрошенным номером
-    page_obj = paginator.get_page(page_number)
+    page_obj = pagination(request, posts)
     context = {
         "group": group,
         "page_obj": page_obj,
@@ -53,9 +57,7 @@ def profile(request, username):
     posts = author.posts.all()
     count = author.posts.count()
     # будем выгружать по 10 постов
-    paginator = Paginator(posts, 10)
-    page_number = request.GET.get("page")
-    page_obj = paginator.get_page(page_number)
+    page_obj = pagination(request, posts)
     context = {
         "page_obj": page_obj,
         "count": count,
@@ -81,22 +83,24 @@ def post_detail(request, post_id):
     return render(request, "posts/post_detail.html", context)
 
 
-# Создать новый пост
+# Создать новый пост, ф-я доступна только авторизованным пользователям
+@login_required
 def create_post(request):
-    if request.method == "POST":
-        form = PostForm(request.POST)
-        if form.is_valid():
-            post = form.save(commit=False)
-            post.author = request.user
-            post.save()
-            return redirect(f"/profile/{post.author}/", {"form": form})
+    form = PostForm(request.POST or None)
+    if form.is_valid():
+        post = form.save(commit=False)
+        post.author = request.user
+        post.save()
+        return redirect(f"/profile/{post.author}/", {"form": form})
+
     form = PostForm()
     groups = Group.objects.all()
     context = {"form": form, "groups": groups}
     return render(request, "posts/create_post.html", context)
 
 
-# Редактировать пост
+# Редактировать пост, ф-я доступна только авторизованным пользователям
+@login_required
 def post_edit(request, post_id):
     is_edit = True
     post = get_object_or_404(Post, pk=post_id)
