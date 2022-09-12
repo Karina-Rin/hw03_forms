@@ -9,6 +9,7 @@ from django.contrib.auth.decorators import login_required
 
 User = get_user_model()
 
+
 # выведем paginator в отдельную функцию во избежании повтора кода
 def pagination(request, objects):
     paginator = Paginator(objects, settings.PAGINATOR_DEFAULT_SIZE)
