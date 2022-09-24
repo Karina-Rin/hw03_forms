@@ -23,9 +23,14 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = "cqrfy@h1!*p#@hpnf8pmu#5ig7qtf=0bvmt)ue8vy8vqf%s((y"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    "[::1]",
+    "testserver",
+]
 
 # Application definition
 
@@ -37,7 +42,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "posts",
-    "users.apps.UsersConfig",
+    "users",
     "core",
     "about",
 ]
@@ -53,7 +58,6 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = "yatube.urls"
-
 TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
 TEMPLATES = [
     {
